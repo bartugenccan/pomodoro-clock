@@ -1,0 +1,11 @@
+.break {
+  text-align: center;
+}
+
+.break-buttons {
+  display: flex;
+}
+
+.dec-btn {
+  margin-right: 25px;
+}

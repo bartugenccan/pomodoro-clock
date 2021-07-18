@@ -1,0 +1,11 @@
+.session {
+  text-align: center;
+}
+
+.session-buttons {
+  display: flex;
+}
+
+.dec-btn {
+  margin-right: 25px;
+}
