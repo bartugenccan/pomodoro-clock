@@ -6,15 +6,31 @@ import Break from "./components/Break";
 import Session from "./components/Session";
 import TimeLeft from "./components/TimeLeft";
 
-//Material UI
-import { Button } from "@material-ui/core";
+import "./App.css";
 
 function App() {
   const [sessionLength, setSessionLength] = useState(1500);
   const [breakLength, setBreakLength] = useState(300);
   const [sessionType, setSessionType] = useState("Session");
-  const [intervalId, setIntervalId] = useState(null);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [timeLeft, setTimeLeft] = useState(sessionLength);
+
+  useEffect(() => {
+    setTimeLeft(sessionLength);
+  }, [sessionLength]);
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      if (sessionType === "Session") {
+        setSessionType("Break");
+        setTimeLeft(breakLength);
+      } else if (sessionType === "Break") {
+        setSessionType("Session");
+
+        setTimeLeft(sessionLength);
+      }
+    }
+  }, [breakLength, timeLeft, sessionType, sessionLength]);
 
   const isStarted = intervalId !== null;
 
@@ -46,37 +62,26 @@ function App() {
     setSessionLength(sessionLength + 60);
   };
 
-  useEffect(() => {
-    setTimeLeft(sessionLength);
-  }, [sessionLength]);
-
   const handleStartStop = () => {
     if (isStarted) {
-      clearInterval(intervalId);
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+      }
+
       setIntervalId(null);
     } else {
       const newIntervalId = setInterval(() => {
-        setTimeLeft((prevTimeLeft) => {
-          const newTimeLeft = prevTimeLeft - 1;
-
-          if (newTimeLeft >= 0) {
-            return prevTimeLeft - 1;
-          }
-          if (sessionType === "Session") {
-            setSessionType("Break");
-            setTimeLeft(breakLength);
-          } else if (sessionType === "Break") {
-            setSessionType("Session");
-            setTimeLeft(sessionLength);
-          }
-        });
+        setTimeLeft((prevTimeLeft) => prevTimeLeft - 1);
       }, 1000);
       setIntervalId(newIntervalId);
     }
   };
 
   const handleReset = () => {
-    clearInterval(intervalId);
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+
     setIntervalId(null);
     setSessionType("Session");
     setSessionLength(1500);
@@ -85,41 +90,27 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <div className="break">
+    <div className="flex flex-col h-screen items-center justify-center bg-indigo-300">
+      <TimeLeft
+        handleReset={handleReset}
+        sessionType={sessionType}
+        timeLeft={timeLeft}
+        handleStartStop={handleStartStop}
+        isStarted={isStarted}
+      />
+      <div className="flex w-full justify-around">
         <Break
           breakLength={breakLength}
           incrementBreakOneMin={incrementBreakOneMin}
           decrementBreakOneMin={decrementBreakOneMin}
         />
-      </div>
-      <div className="time-left">
-        <TimeLeft
-          sessionType={sessionType}
-          timeLeft={timeLeft}
-          handleStartStop={handleStartStop}
-          isStarted={isStarted}
-        />
-      </div>
 
-      <div className="session">
         <Session
           sessionLength={sessionLength}
           decrementSessionOneMin={decrementSessionOneMin}
           incrementSessionOneMin={incrementSessionOneMin}
         />
       </div>
-      <Button
-        variant="contained"
-        color="primary"
-        className="reset"
-        onClick={handleReset}
-      >
-        Reset
-      </Button>
-      <audio id="alarm" src="">
-        <source src />
-      </audio>
     </div>
   );
 }
